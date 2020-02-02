@@ -1,10 +1,11 @@
 module Kafka
     class ConsumeGroupLag
-        def initialize(cluster:, logger:, group_id:, fetcher:)
+        def initialize(cluster:, logger:, group_id:, fetcher:, poll_duration: 1)
             @cluster = cluster
             @logger = logger
             @group_id = group_id
             @fetcher = fetcher
+            @poll_duration = poll_duration
 
             @running = false
         end
@@ -37,6 +38,7 @@ module Kafka
 
             while running?
                 yield
+                sleep @poll_duration
             end
         ensure
             @fetcher.stop

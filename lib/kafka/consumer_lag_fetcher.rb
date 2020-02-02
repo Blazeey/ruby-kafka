@@ -1,11 +1,12 @@
 module Kafka
     class ConsumerLagFetcher
 
-        def initialize(cluster:, logger:, instrumenter:, group: )
+        def initialize(cluster:, logger:, instrumenter:, group:, poll_duration: 1)
             @cluster = cluster
             @logger = TaggedLogger.new(logger)
             @instrumenter = instrumenter
             @group = group
+            @poll_duration = poll_duration
 
             @operation = ConsumerLagOperation.new(
                 cluster: @cluster,
@@ -24,9 +25,9 @@ module Kafka
 
             @thread = Thread.new do
                 while @running
-                    puts 'thread'
+                    # puts 'thread'
                     loop
-                    # sleep 1
+                    sleep @poll_duration
                 end
                 @logger.info "#{@group} Fetcher thread exited."
             end
