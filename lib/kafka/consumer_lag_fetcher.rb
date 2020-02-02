@@ -62,7 +62,7 @@ module Kafka
         def loop
             return unless @running
             messages = @operation.execute
-            @queue << [messages]
+            @queue << messages
             puts 'QUEUEING MESSAGE'
         end
     end

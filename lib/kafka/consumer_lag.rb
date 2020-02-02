@@ -25,7 +25,7 @@ module Kafka
         def stop
             @running = false
             @fetcher.stop
-            @cluster.disconnnect
+            @cluster.disconnect
         end
 
         private
