@@ -405,7 +405,7 @@ module Kafka
       )
     end
 
-    def consumer_lag(group_id:)
+    def consumer_lag(group_id:, poll_duration: 1)
       cluster = initialize_cluster
 
       instrumenter = DecoratingInstrumenter.new(@instrumenter, {
@@ -416,14 +416,16 @@ module Kafka
         cluster: cluster,
         logger: @logger,
         instrumenter: instrumenter,
-        group:group_id
+        group: group_id,
+        poll_duration: poll_duration
       )
 
       ConsumeGroupLag.new(
         cluster: cluster,
         logger: @logger,
         group_id: group_id,
-        fetcher: fetcher
+        fetcher: fetcher,
+        poll_duration: poll_duration
       )
 
     end

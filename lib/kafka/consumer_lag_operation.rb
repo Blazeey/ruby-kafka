@@ -47,7 +47,7 @@ end
 # k = Kafka.new(['localhost:9092'])
 # k.fetch_consumer_lag(group_id: 'java-consumer')
 
-# Kafka.new(['localhost:9092']).consumer_lag(group_id: 'java-consumer').fetch_lags do |l|
+# Kafka.new(['localhost:9092']).consumer_lag(group_id: 'java-consumer', poll_duration: 2).fetch_lags do |l|
 #     puts l.to_s + 'OUTSIDE'
 # end
 
