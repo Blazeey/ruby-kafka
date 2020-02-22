@@ -402,6 +402,45 @@ module Kafka
       @cluster_info ||= fetch_cluster_info
     end
 
+    def topics_per_broker(topics: nil)
+      partition_details = {}
+      topic_details = random_broker.fetch_metadata(topics: topics).topics
+      partition_details = {}
+
+      topic_details.each do |topic|
+        topic.partitions.each do |partition|
+          data = {
+            partition_id: partition.partition_id,
+            replicas: partition.replicas,
+            isr: partition.isr
+          }
+          partition_details[partition.leader] ||= {}
+          partition_details[partition.leader][topic.topic_name] ||= []
+          partition_details[partition.leader][topic.topic_name].push(data)
+        end
+      end
+      partition_details
+    end
+
+    def broker_topics(node_id: )
+      response = connect_to_broker(node_id).fetch_metadata(topics: nil)
+      response.topics
+    end
+
+    def topic_metadata(topic: )
+      configs = [
+        'min.insync.replicas',
+        'follower.replication.throttled.replicas',
+        'leader.replication.throttled.replicas'
+      ]
+      topic_details = {}
+      topic_details['configs'] = describe_topic(topic, configs)
+      min_isr = topic_details['min.insync.replicas']
+      num_partitions = partitions_for(topic).count
+      topic_details['brokers'] = topics_per_broker(topics: [topic])
+      topic_details
+    end
+
     private
 
     def get_leader_id(topic, partition)

@@ -46,3 +46,7 @@ module Kafka
 
   end
 end
+
+# k = Kafka.new(['192.168.0.103:32772'])
+# c = k.cluster
+# c.topic_metadata(topic: 'first-topic')

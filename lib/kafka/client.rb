@@ -802,6 +802,22 @@ module Kafka
       end
     end
 
+    def cluster
+      @cluster
+    end
+
+    def topics_per_broker(topics: nil)
+      @cluster.topics_per_broker(topics)
+    end
+    
+    def broker_topics(node_id: )
+      @cluster.broker_topics(node_id: node_id)
+    end
+
+    def topic_metadata(topic: )
+      @cluster.topic_metadata(topic: topic)
+    end
+    
     private
 
     def initialize_cluster
