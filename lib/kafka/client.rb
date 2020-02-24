@@ -541,7 +541,10 @@ module Kafka
       default_offset ||= start_from_beginning ? :earliest : :latest
       offsets = Hash.new { default_offset }
 
+      @stop_consumer = false
       loop do
+        return if @stop_consumer == true
+        
         operation = FetchOperation.new(
           cluster: @cluster,
           logger: @logger,
@@ -561,6 +564,10 @@ module Kafka
           offsets[batch.partition] = batch.last_offset + 1 unless batch.unknown_last_offset?
         end
       end
+    end
+
+    def stop
+      @stop_consumer = true
     end
 
     # Describe broker configs
