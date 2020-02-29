@@ -825,6 +825,30 @@ module Kafka
       @cluster.topic_metadata(topic: topic)
     end
     
+    def partitions_details_for(topic)
+      @cluster.partitions_for(topic)
+    end
+
+    def topic_statistics(topic: )
+      configs = ['min.insync.replicas']
+      topic_details = {}
+      topic_details[:configs] = describe_topic(topic, configs)
+      topic_details[:partitions] = partitions_details_for(topic)
+      topic_details[:offsets] = last_offsets_for(topic)[topic]
+      topic_details[:count] = topic_details[:offsets].values.sum + topic_details[:offsets].count
+      topic_details[:average] = topic_details[:count]/topic_details[:partitions].count
+      topic_details[:max] = topic_details[:offsets].values.max
+      topic_details[:min] = topic_details[:offsets].values.min
+      topic_details[:percentile] = percentile(topic_details[:offsets].values, 0.95)
+      topic_details[:below_min_isr] = 0
+      topic_details[:partitions].each do |p| 
+        topic_details[:below_min_isr] += ((p.isr.count >= topic_details[:configs]['min.insync.replicas'].to_i)? 0: 1) 
+      end
+      topic_details
+    end
+    # k=Kafka.new(['localhost:9092'])
+    # k.topic_statistics(topic: 'topic4')
+    
     private
 
     def initialize_cluster
@@ -847,5 +871,14 @@ module Kafka
 
       seed_brokers.map {|str| BrokerUri.parse(str) }
     end
+    
+    def percentile(values, percentile)
+      values_sorted = values.sort
+      k = (percentile*(values_sorted.length-1)+1).floor - 1
+      f = (percentile*(values_sorted.length-1)+1).modulo(1)
+  
+      values_sorted[k] + (f * (values_sorted[k+1] - values_sorted[k]))
+    end
+
   end
 end

@@ -247,6 +247,7 @@ module Kafka
     end
 
     def describe_topic(name, configs = [])
+      
       options = {
         resources: [[Kafka::Protocol::RESOURCE_TYPE_TOPIC, name, configs]]
       }
@@ -412,7 +413,8 @@ module Kafka
           data = {
             partition_id: partition.partition_id,
             replicas: partition.replicas,
-            isr: partition.isr
+            isr: partition.isr,
+            leader: partition.leader
           }
           partition_details[partition.leader] ||= {}
           partition_details[partition.leader][topic.topic_name] ||= []
