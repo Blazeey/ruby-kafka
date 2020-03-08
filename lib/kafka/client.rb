@@ -814,7 +814,7 @@ module Kafka
     end
 
     def topics_per_broker(topics: nil)
-      @cluster.topics_per_broker(topics)
+      @cluster.topics_per_broker(topics: topics)
     end
     
     def broker_topics(node_id: )
@@ -830,24 +830,41 @@ module Kafka
     end
 
     def topic_statistics(topic: )
-      configs = ['min.insync.replicas']
+      # configs = ['min.insync.replicas']
       topic_details = {}
-      topic_details[:configs] = describe_topic(topic, configs)
-      topic_details[:partitions] = partitions_details_for(topic)
+      topic_details[:name] = topic
+      # topic_details[:configs] = describe_topic(topic, configs)
+      topic_details[:partitions] = partitions_details_for(topic).sort {|a,b| a.partition_id <=> b.partition_id }
       topic_details[:offsets] = last_offsets_for(topic)[topic]
-      topic_details[:count] = topic_details[:offsets].values.sum + topic_details[:offsets].count
+      topic_details[:offsets].keys.each{|offset| topic_details[:offsets][offset] = topic_details[:offsets][offset] + 1}
+      topic_details[:count] = topic_details[:offsets].values.sum
       topic_details[:average] = topic_details[:count]/topic_details[:partitions].count
       topic_details[:max] = topic_details[:offsets].values.max
       topic_details[:min] = topic_details[:offsets].values.min
       topic_details[:percentile] = percentile(topic_details[:offsets].values, 0.95)
       topic_details[:below_min_isr] = 0
+      topic_details[:avg_isr] = 0
+      # topic_details[:partitions].each do |p| 
+      #   topic_details[:below_min_isr] += ((p.isr.count >= topic_details[:configs]['min.insync.replicas'].to_i)? 0: 1) 
+      # end
       topic_details[:partitions].each do |p| 
-        topic_details[:below_min_isr] += ((p.isr.count >= topic_details[:configs]['min.insync.replicas'].to_i)? 0: 1) 
+        topic_details[:avg_isr] += (p.isr.count)
       end
+      topic_details[:avg_isr] = topic_details[:avg_isr]/topic_details[:partitions].count
       topic_details
     end
-    # k=Kafka.new(['localhost:9092'])
-    # k.topic_statistics(topic: 'topic4')
+
+    def broker_details
+      broker_details = {}
+      broker_details[:brokers] = brokers
+      broker_details[:controller_broker] = controller_broker
+      broker_details[:partitions_per_broker] = @cluster.broker_statistics
+      broker_details[:count] = broker_details[:partitions_per_broker].values.sum
+      broker_details[:average] = broker_details[:partitions_per_broker].values.sum/broker_details[:brokers].length
+      broker_details[:max] = broker_details[:partitions_per_broker].values.max
+      broker_details[:min] = broker_details[:partitions_per_broker].values.min
+      broker_details
+    end
     
     private
 
@@ -873,6 +890,9 @@ module Kafka
     end
     
     def percentile(values, percentile)
+      if values.size == 1
+        return values[0]
+      end
       values_sorted = values.sort
       k = (percentile*(values_sorted.length-1)+1).floor - 1
       f = (percentile*(values_sorted.length-1)+1).modulo(1)

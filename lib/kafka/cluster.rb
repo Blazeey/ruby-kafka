@@ -424,6 +424,19 @@ module Kafka
       partition_details
     end
 
+    def broker_statistics(topics: nil)
+      topic_details = random_broker.fetch_metadata(topics: topics).topics
+      partition_details = {}
+
+      topic_details.each do |topic|
+        topic.partitions.each do |partition|
+          partition_details[partition.leader] ||= 0
+          partition_details[partition.leader] += 1
+        end
+      end
+      partition_details
+    end
+
     def broker_topics(node_id: )
       response = connect_to_broker(node_id).fetch_metadata(topics: nil)
       response.topics
