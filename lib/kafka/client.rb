@@ -795,6 +795,10 @@ module Kafka
       @cluster.disconnect
     end
 
+    def refresh_cluster
+      @cluster.refresh_metadata!
+    end
+    
     def fetch_consumer_lag(group_id:, &block)
       loop do
         operation = ConsumerLagOperation.new(
