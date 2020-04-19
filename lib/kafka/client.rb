@@ -869,6 +869,31 @@ module Kafka
       broker_details[:min] = broker_details[:partitions_per_broker].values.min
       broker_details
     end
+
+    def group_statistics(group_id: )
+      group_details = {}
+      group_details[:name] = group_id
+      group = fetch_group_offsets(group_id)
+      group_details[:topics_count] = group.count
+      topic_offsets = last_offsets_for(*group.keys)
+      consumer_lags = []
+      topic_offsets.keys.each do |topic|
+        topic_offsets[topic].keys.each do |partition|
+          puts group[topic][partition]
+          group[topic][partition] = group[topic][partition].instance_variables.each_with_object({}) { |var, hash| hash[var.to_s.delete("@")] = group[topic][partition].instance_variable_get(var) }
+          puts group[topic][partition]
+          group[topic][partition]['log_end_offset'] = topic_offsets[topic][partition]
+          group[topic][partition]['lag'] = group[topic][partition]['log_end_offset'] + 1 - group[topic][partition]['offset']
+        end
+      end
+      lags = group.collect {|k,v| v.collect{|p,q| q['lag']}}.flatten
+      group_details[:details] = group
+      group_details[:average] = lags.sum / lags.length
+      group_details[:min] = lags.max
+      group_details[:max] = lags.min
+      group_details[:percentile] = percentile(lags, 0.95)
+      group_details
+    end
     
     private
 
