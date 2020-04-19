@@ -21,7 +21,7 @@ module Kafka
                         off = {
                             offset: p.offset,
                             topic_offset: topic_offsets[topic][partition],
-                            consumer_lag: topic_offsets[topic][partition] - p.offset 
+                            consumer_lag: topic_offsets[topic][partition] + 1 - p.offset 
                         }
                         [partition, off]
                     }.to_h
