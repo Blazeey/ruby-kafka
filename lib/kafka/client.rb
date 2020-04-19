@@ -887,8 +887,8 @@ module Kafka
       lags = group.collect {|k,v| v.collect{|p,q| q['lag']}}.flatten
       group_details[:details] = group
       group_details[:average] = lags.length > 0? lags.sum / lags.length : 0
-      group_details[:min] = lags.length > 0? lags.max : 0
-      group_details[:max] = lags.length > 0? lags.min : 0
+      group_details[:max] = lags.length > 0? lags.max : 0
+      group_details[:min] = lags.length > 0? lags.min : 0
       group_details[:percentile] = lags.length > 0? percentile(lags, 0.95): 0
       group_details[:gt_50] = lags.select{|l| l >= 50 }.count
       group_details[:gt_100] = lags.select{|l| l >= 100 }.count
