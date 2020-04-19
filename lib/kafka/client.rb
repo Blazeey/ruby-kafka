@@ -879,9 +879,7 @@ module Kafka
       consumer_lags = []
       topic_offsets.keys.each do |topic|
         topic_offsets[topic].keys.each do |partition|
-          puts group[topic][partition]
           group[topic][partition] = group[topic][partition].instance_variables.each_with_object({}) { |var, hash| hash[var.to_s.delete("@")] = group[topic][partition].instance_variable_get(var) }
-          puts group[topic][partition]
           group[topic][partition]['log_end_offset'] = topic_offsets[topic][partition]
           group[topic][partition]['lag'] = group[topic][partition]['log_end_offset'] + 1 - group[topic][partition]['offset']
         end
@@ -892,6 +890,9 @@ module Kafka
       group_details[:min] = lags.max
       group_details[:max] = lags.min
       group_details[:percentile] = percentile(lags, 0.95)
+      group_details[:gt_50] = lags.select{|l| l >= 50 }.count
+      group_details[:gt_100] = lags.select{|l| l >= 100 }.count
+      group_details[:gt_500] = lags.select{|l| l >= 500 }.count
       group_details
     end
     
