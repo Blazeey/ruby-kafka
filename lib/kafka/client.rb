@@ -877,19 +877,21 @@ module Kafka
       group_details[:topics_count] = group.count
       topic_offsets = last_offsets_for(*group.keys)
       consumer_lags = []
-      topic_offsets.keys.each do |topic|
-        topic_offsets[topic].keys.each do |partition|
+      group.keys.each do |topic|
+        group[topic].keys.each do |partition|
           group[topic][partition] = group[topic][partition].instance_variables.each_with_object({}) { |var, hash| hash[var.to_s.delete("@")] = group[topic][partition].instance_variable_get(var) }
           group[topic][partition]['log_end_offset'] = topic_offsets[topic][partition]
+          puts topic, partition
+          puts group[topic][partition]
           group[topic][partition]['lag'] = group[topic][partition]['log_end_offset'] + 1 - group[topic][partition]['offset']
         end
       end
       lags = group.collect {|k,v| v.collect{|p,q| q['lag']}}.flatten
       group_details[:details] = group
-      group_details[:average] = lags.sum / lags.length
+      group_details[:average] = lags.length > 0? lags.sum / lags.length : 0
       group_details[:min] = lags.max
       group_details[:max] = lags.min
-      group_details[:percentile] = percentile(lags, 0.95)
+      group_details[:percentile] = lags.length > 0? percentile(lags, 0.95): 0
       group_details[:gt_50] = lags.select{|l| l >= 50 }.count
       group_details[:gt_100] = lags.select{|l| l >= 100 }.count
       group_details[:gt_500] = lags.select{|l| l >= 500 }.count
