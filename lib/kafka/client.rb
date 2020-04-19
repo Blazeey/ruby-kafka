@@ -881,16 +881,14 @@ module Kafka
         group[topic].keys.each do |partition|
           group[topic][partition] = group[topic][partition].instance_variables.each_with_object({}) { |var, hash| hash[var.to_s.delete("@")] = group[topic][partition].instance_variable_get(var) }
           group[topic][partition]['log_end_offset'] = topic_offsets[topic][partition]
-          puts topic, partition
-          puts group[topic][partition]
           group[topic][partition]['lag'] = group[topic][partition]['log_end_offset'] + 1 - group[topic][partition]['offset']
         end
       end
       lags = group.collect {|k,v| v.collect{|p,q| q['lag']}}.flatten
       group_details[:details] = group
       group_details[:average] = lags.length > 0? lags.sum / lags.length : 0
-      group_details[:min] = lags.max
-      group_details[:max] = lags.min
+      group_details[:min] = lags.length > 0? lags.max : 0
+      group_details[:max] = lags.length > 0? lags.min : 0
       group_details[:percentile] = lags.length > 0? percentile(lags, 0.95): 0
       group_details[:gt_50] = lags.select{|l| l >= 50 }.count
       group_details[:gt_100] = lags.select{|l| l >= 100 }.count
